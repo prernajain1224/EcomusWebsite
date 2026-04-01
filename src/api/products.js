@@ -5,8 +5,11 @@ export const getProducts = async (page = 1, filters = {}) => {
   const params = new URLSearchParams({ page });
 
   if (filters.sort) params.append("sort", filters.sort);
-  if (filters.gender) params.append("gender", filters.gender);
+  if (filters.query) params.append("query", filters.query);
+  if (filters.category_id) params.append("category_id", filters.category_id);
   if (filters.categories) params.append("categories", filters.categories);
+  if (filters.product_type) params.append("product_type", filters.product_type);
+  if (filters.gender) params.append("gender", filters.gender);
   if (filters.sizes) params.append("sizes", filters.sizes);
   if (filters.colors) params.append("colors", filters.colors);
   if (filters.collection_id)

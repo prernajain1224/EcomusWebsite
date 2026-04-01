@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../components/PageTitle";
 import { getProducts, getFilters } from "../api/products";
 import { getImageUrl } from "../api/utils";
-import { OK, showErrorMessage } from "../utils";
+import { OK, showErrorMessage, stripEmojis } from "../utils";
 import ProductFilters from "../components/ProductFilters";
 import ProductCard from "../components/ProductCard";
 
@@ -59,8 +59,9 @@ const Products = () => {
   const [productTypes, setProductTypes] = useState([]);
   const [productTypesLoading, setProductTypesLoading] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
-    categories: [],
     product_types: [],
+    genders: [],
+    collections: [],
     sizes: [],
     colors: [],
     priceRange: [0, 5000],
@@ -216,7 +217,6 @@ const Products = () => {
 
   const clearAllFilters = () => {
     handleFilterChange({
-      categories: [],
       product_types: [],
       genders: [],
       collections: [],
@@ -241,11 +241,6 @@ const Products = () => {
       key: `collections:${value}`,
       label: `Collection: ${value}`,
       onRemove: () => removeFilterValue("collections", value),
-    })),
-    ...(activeFilters.categories || []).map((value) => ({
-      key: `categories:${value}`,
-      label: `Category: ${value}`,
-      onRemove: () => removeFilterValue("categories", value),
     })),
     ...(activeFilters.sizes || []).map((value) => ({
       key: `sizes:${value}`,
@@ -298,7 +293,6 @@ const Products = () => {
     try {
       const f = filtersRef.current;
       const res = await getProducts(page, {
-        categories: f.categories.join(","),
         product_type: (f.product_types || []).join(","),
         gender: (f.genders || []).join(","),
         collection_id: (f.collections || []).join(","),
@@ -307,9 +301,8 @@ const Products = () => {
         price_min: f.priceRange[0],
         price_max: f.priceRange[1],
         sort: sortBy,
-        gender,
-        category,
-        search,
+        query: search,
+        category_id: category,
       });
 
       if (res?.status === OK) {
@@ -522,8 +515,9 @@ const Products = () => {
                     {saleProducts.length > 0 ? (
                       saleProducts.map((product) => {
                         const image = getProductImage(product);
-                        const title =
-                          product.name || product.title || "Product";
+                        const title = stripEmojis(
+                          product.name || product.title || "Product",
+                        );
                         const price = Number(product.price || 0);
 
                         return (
@@ -675,7 +669,9 @@ const Products = () => {
                   <div className="grid-3 gap-4 mb_36">
                     {galleryProducts.map((product, index) => {
                       const image = getProductImage(product);
-                      const title = product.name || product.title || "Product";
+                      const title = stripEmojis(
+                        product.name || product.title || "Product",
+                      );
                       return (
                         <a
                           href={
@@ -853,7 +849,6 @@ const Products = () => {
         onClose={() => setFilterOpen(false)}
         onFilterChange={(f) =>
           handleFilterChange({
-            categories: f.categories || [],
             product_types: f.product_types || [],
             genders: f.genders || [],
             collections: f.collections || [],

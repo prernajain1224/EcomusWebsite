@@ -6,7 +6,7 @@ import { getFilters } from "../api/products";
  * Props:
  * - open: boolean
  * - onClose: function
- * - onFilterChange: function({ availability, priceMin, priceMax, colors, sizes, categories, product_types, genders, collections })
+ * - onFilterChange: function({ priceMin, priceMax, colors, sizes, product_types, genders, collections })
  * - collectionId: optional string
  */
 const ProductFilters = ({
@@ -16,12 +16,10 @@ const ProductFilters = ({
   collectionId = "",
 }) => {
   const [data, setData] = useState(null);
-  const [availability, setAvailability] = useState("");
   const [priceMin, setPriceMin] = useState(0);
   const [priceMax, setPriceMax] = useState(5000);
   const [selectedColors, setSelectedColors] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
-  const [selectedCats, setSelectedCats] = useState([]);
   const [selectedProductTypes, setSelectedProductTypes] = useState([]);
   const [selectedGenders, setSelectedGenders] = useState([]);
   const [selectedCollections, setSelectedCollections] = useState([]);
@@ -48,12 +46,10 @@ const ProductFilters = ({
 
   const emit = (overrides = {}) => {
     onFilterChange?.({
-      availability,
       priceMin,
       priceMax,
       colors: selectedColors,
       sizes: selectedSizes,
-      categories: selectedCats,
       product_types: selectedProductTypes,
       genders: selectedGenders,
       collections: selectedCollections,
@@ -70,22 +66,18 @@ const ProductFilters = ({
   };
 
   const handleClearAll = () => {
-    setAvailability("");
     setPriceMin(Number(data?.price_range?.min) || 0);
     setPriceMax(Number(data?.price_range?.max) || 5000);
     setSelectedColors([]);
     setSelectedSizes([]);
-    setSelectedCats([]);
     setSelectedProductTypes([]);
     setSelectedGenders([]);
     setSelectedCollections([]);
     onFilterChange?.({
-      availability: "",
       priceMin: Number(data?.price_range?.min) || 0,
       priceMax: Number(data?.price_range?.max) || 5000,
       colors: [],
       sizes: [],
-      categories: [],
       product_types: [],
       genders: [],
       collections: [],
@@ -269,72 +261,6 @@ const ProductFilters = ({
                 </ul>
               </div>
             )}
-
-            {/* ── Categories (API) ── */}
-            {data?.categories?.length > 0 && (
-              <div className="widget-facet">
-                <div className="facet-title">
-                  <span>Product Categories</span>
-                  <span className="icon icon-arrow-up" />
-                </div>
-                <ul className="list-categoris current-scrollbar mb_36">
-                  {data.categories.map((cat) => (
-                    <li
-                      key={cat.id}
-                      className={`cate-item${selectedCats.includes(cat.slug) ? " current" : ""}`}
-                      onClick={() =>
-                        toggleItem(
-                          selectedCats,
-                          setSelectedCats,
-                          cat.slug,
-                          "categories",
-                        )
-                      }
-                      style={{ cursor: "pointer" }}
-                    >
-                      <a href="#" onClick={(e) => e.preventDefault()}>
-                        <span>{cat.name}</span>&nbsp;
-                        <span>({cat.count})</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* ── Availability ── */}
-            <div className="widget-facet">
-              <div className="facet-title">
-                <span>Availability</span>
-                <span className="icon icon-arrow-up" />
-              </div>
-              <ul className="tf-filter-group current-scrollbar mb_36">
-                {[
-                  { label: "In stock", value: "in_stock" },
-                  { label: "Out of stock", value: "out_of_stock" },
-                ].map((opt) => (
-                  <li
-                    key={opt.value}
-                    className="list-item d-flex gap-12 align-items-center"
-                  >
-                    <input
-                      type="radio"
-                      name="availability"
-                      className="tf-check"
-                      id={opt.value}
-                      checked={availability === opt.value}
-                      onChange={() => {
-                        setAvailability(opt.value);
-                        emit({ availability: opt.value });
-                      }}
-                    />
-                    <label htmlFor={opt.value} className="label">
-                      <span>{opt.label}</span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </div>
 
             {/* ── Price (from API range) ── */}
             <div className="widget-facet">

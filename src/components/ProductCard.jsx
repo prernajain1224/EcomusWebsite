@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { getImageUrl } from "../api/utils";
+import { stripEmojis } from "../utils";
 
 const FALLBACK_IMAGE = "/assets/images/product-placeholder.svg";
 
@@ -96,7 +97,7 @@ const ProductCard = ({ product }) => {
       </div>
       <div className="card-product-info">
         <Link to={`/products/${product.slug}`} className="title link">
-          {product.name}
+          {stripEmojis(product.name)}
         </Link>
         <span className="price current-price">
           ₹{Number(product.price).toLocaleString("en-IN")}
