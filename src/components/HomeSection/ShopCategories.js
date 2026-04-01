@@ -44,13 +44,13 @@ const ShopCategories = () => {
             <i className="icon icon-arrow1-top-left"></i>
           </a>
         </div>
-        <div className="row">
+        <div className="row justify-content-center">
           {categories.map((category) => (
             <div
-              className="col-lg-2 col-md-3 col-sm-4 col-6 mb-4"
+              className="col-lg-3 col-md-4 col-sm-6 col-6 mb-4 d-flex justify-content-center"
               key={category.id}
             >
-              <div className="collection-item-circle hover-img">
+              <div className="collection-item-circle hover-img" style={{ maxWidth: 240, width: "100%" }}>
                 <a
                   href={category.link}
                   className="collection-image img-style d-block"

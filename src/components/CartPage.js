@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getImageUrl } from "../api/utils";
 
 // Icon Components
@@ -360,6 +360,7 @@ const CartPage = ({
   giftWrapPrice = 5.0,
   countdownTimer = 600, // 10 minutes in seconds
 }) => {
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [giftWrap, setGiftWrap] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -468,13 +469,7 @@ const CartPage = ({
         total,
       });
     } else {
-      console.log("Proceeding to checkout with:", {
-        items: cartItems,
-        subtotal,
-        giftWrap,
-        orderNote,
-        total,
-      });
+      navigate("/checkout");
     }
   };
 
@@ -608,6 +603,7 @@ const CartPage = ({
                 {/* Checkout Button */}
                 <div className="cart-checkout-btn">
                   <button
+                    type="button"
                     onClick={handleCheckout}
                     className="tf-btn w-100 btn-fill animate-hover-btn radius-3 justify-content-center"
                   >

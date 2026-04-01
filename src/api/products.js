@@ -10,6 +10,7 @@ export const getProducts = async (page = 1, filters = {}) => {
   if (filters.categories) params.append("categories", filters.categories);
   if (filters.product_type) params.append("product_type", filters.product_type);
   if (filters.gender) params.append("gender", filters.gender);
+  if (filters.age) params.append("age", filters.age);
   if (filters.sizes) params.append("sizes", filters.sizes);
   if (filters.colors) params.append("colors", filters.colors);
   if (filters.collection_id)

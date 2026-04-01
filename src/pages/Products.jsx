@@ -61,6 +61,7 @@ const Products = () => {
   const [activeFilters, setActiveFilters] = useState({
     product_types: [],
     genders: [],
+    ages: [],
     collections: [],
     sizes: [],
     colors: [],
@@ -185,6 +186,24 @@ const Products = () => {
   const gender = searchParams.get("gender") || "";
   const category = searchParams.get("category") || "";
   const search = searchParams.get("search") || "";
+  const productType = searchParams.get("product_type") || "";
+  const age = searchParams.get("age") || "";
+
+  useEffect(() => {
+    const nextFilters = {
+      ...activeFilters,
+      product_types: productType ? [productType] : [],
+      genders: gender ? [gender] : [],
+      ages: age ? [age] : [],
+    };
+
+    filtersRef.current = nextFilters;
+    setActiveFilters(nextFilters);
+    setProducts([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    isFetchingRef.current = false;
+  }, [gender, productType, category, search, age]);
 
   // Reset on filter change
   const handleFilterChange = (newFilters) => {
@@ -219,6 +238,7 @@ const Products = () => {
     handleFilterChange({
       product_types: [],
       genders: [],
+      ages: [],
       collections: [],
       sizes: [],
       colors: [],
@@ -236,6 +256,11 @@ const Products = () => {
       key: `genders:${value}`,
       label: `Gender: ${value}`,
       onRemove: () => removeFilterValue("genders", value),
+    })),
+    ...(activeFilters.ages || []).map((value) => ({
+      key: `ages:${value}`,
+      label: `Age: ${value}`,
+      onRemove: () => removeFilterValue("ages", value),
     })),
     ...(activeFilters.collections || []).map((value) => ({
       key: `collections:${value}`,
@@ -259,7 +284,7 @@ const Products = () => {
 
   useEffect(() => {
     loadProducts(currentPage);
-  }, [currentPage, activeFilters, sortBy]);
+  }, [currentPage, activeFilters, sortBy, gender, category, search, age]);
 
   useEffect(() => {
     let alive = true;
@@ -295,6 +320,7 @@ const Products = () => {
       const res = await getProducts(page, {
         product_type: (f.product_types || []).join(","),
         gender: (f.genders || []).join(","),
+        age: (f.ages || []).join(","),
         collection_id: (f.collections || []).join(","),
         sizes: f.sizes.join(","),
         colors: f.colors.join(","),
@@ -851,6 +877,7 @@ const Products = () => {
           handleFilterChange({
             product_types: f.product_types || [],
             genders: f.genders || [],
+            ages: f.ages || [],
             collections: f.collections || [],
             sizes: f.sizes || [],
             colors: f.colors || [],

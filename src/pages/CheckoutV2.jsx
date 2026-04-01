@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../App.css";
 import { useNavigate } from "react-router-dom";
 import { PageTitle } from "../components/PageTitle";
@@ -11,6 +11,8 @@ import {
   deleteAddress,
   getAddresses,
 } from "../api/checkout";
+import { getImageUrl } from "../api/utils";
+import { stripEmojis } from "../utils";
 import toast from "react-hot-toast";
 
 const BLANK_ADDRESS = {
@@ -32,6 +34,7 @@ const CheckoutV2 = () => {
   const cartData = useCartStore((state) => state.cartData);
   const loading = useCartStore((state) => state.loading);
   const cartId = useCartStore((state) => state.cartId);
+  const currentCartId = cartData?.id || cartData?.cart_id || cartId;
 
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
@@ -42,7 +45,23 @@ const CheckoutV2 = () => {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [savingAddress, setSavingAddress] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const hasLoadedAddressesRef = useRef(false);
+  const handledSessionTimeoutRef = useRef(false);
   const isAuthenticated = Boolean(token);
+
+  useEffect(() => {
+    const savedCoupon = sessionStorage.getItem("hh_coupon");
+    if (!savedCoupon) return;
+    try {
+      const parsed = JSON.parse(savedCoupon);
+      if (parsed?.code) {
+        setCouponCode(parsed.code);
+        setCouponApplied(parsed);
+      }
+    } catch {
+      sessionStorage.removeItem("hh_coupon");
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -68,7 +87,8 @@ const CheckoutV2 = () => {
   }, [cartData, fetchCart, isAuthenticated]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || hasLoadedAddressesRef.current) return;
+    hasLoadedAddressesRef.current = true;
     const loadAddresses = async () => {
       try {
         const res = await getAddresses();
@@ -77,6 +97,20 @@ const CheckoutV2 = () => {
         const selected = list.find((address) => address.is_default) || list[0];
         if (selected) setSelectedAddressId(selected.id);
       } catch (err) {
+        if (err === "sessionTimeout") {
+          if (!handledSessionTimeoutRef.current) {
+            handledSessionTimeoutRef.current = true;
+            localStorage.removeItem("Token");
+            navigate("/login", {
+              replace: true,
+              state: {
+                from: "/checkout",
+                message: "Please login again to continue checkout",
+              },
+            });
+          }
+          return;
+        }
         toast.error(err?.message || "Could not load addresses");
       }
     };
@@ -87,7 +121,7 @@ const CheckoutV2 = () => {
   const orderItems = useMemo(() => {
     return (cartData?.items || []).map((item) => ({
       id: item.id,
-      title: item.product_name || item.name || "Cart Item",
+      title: stripEmojis(item.product_name || item.name || "Cart Item"),
       variant: [
         item.variant_color || item.color,
         item.variant_size || item.size,
@@ -97,10 +131,9 @@ const CheckoutV2 = () => {
       price: Number(item.price || item.product_price || 0),
       quantity: Number(item.quantity || 1),
       image:
-        item.image_url ||
-        item.display_image ||
-        item.product_image ||
-        "/product-placeholder.svg",
+        getImageUrl(
+          item.image_url || item.display_image || item.product_image || "",
+        ) || "/assets/images/product-placeholder.svg",
     }));
   }, [cartData]);
 
@@ -137,6 +170,17 @@ const CheckoutV2 = () => {
       setAddresses(refreshed?.addresses || []);
       toast.success("Address saved");
     } catch (err) {
+      if (err === "sessionTimeout") {
+        localStorage.removeItem("Token");
+        navigate("/login", {
+          replace: true,
+          state: {
+            from: "/checkout",
+            message: "Please login again to continue checkout",
+          },
+        });
+        return;
+      }
       toast.error(err?.message || "Could not save address");
     } finally {
       setSavingAddress(false);
@@ -154,6 +198,17 @@ const CheckoutV2 = () => {
       setSelectedAddressId(selected?.id || null);
       toast.success("Address removed");
     } catch (err) {
+      if (err === "sessionTimeout") {
+        localStorage.removeItem("Token");
+        navigate("/login", {
+          replace: true,
+          state: {
+            from: "/checkout",
+            message: "Please login again to continue checkout",
+          },
+        });
+        return;
+      }
       toast.error(err?.message || "Could not remove address");
     }
   };
@@ -162,13 +217,35 @@ const CheckoutV2 = () => {
     if (!isAuthenticated) return;
     if (!couponCode.trim()) return;
     try {
-      const res = await applyCoupon(couponCode.trim().toUpperCase(), cartId);
-      setCouponApplied({
-        code: couponCode.trim().toUpperCase(),
+      const code = couponCode.trim().toUpperCase();
+      if (!currentCartId) {
+        toast.error("Cart is not ready yet. Please try again.");
+        return;
+      }
+      const res = await applyCoupon(code, currentCartId);
+      const applied = {
+        code,
         discount_amount: res?.discount_amount || 0,
+        message: res?.message || "Coupon applied",
+      };
+      sessionStorage.setItem("hh_coupon", JSON.stringify(applied));
+      setCouponApplied({
+        code: applied.code,
+        discount_amount: applied.discount_amount,
       });
-      toast.success(res?.message || "Coupon applied");
+      toast.success(applied.message);
     } catch (err) {
+      if (err === "sessionTimeout") {
+        localStorage.removeItem("Token");
+        navigate("/login", {
+          replace: true,
+          state: {
+            from: "/checkout",
+            message: "Please login again to continue checkout",
+          },
+        });
+        return;
+      }
       toast.error(err?.message || "Could not apply coupon");
     }
   };
@@ -182,7 +259,7 @@ const CheckoutV2 = () => {
     setPlacingOrder(true);
     try {
       const orderRes = await createOrder({
-        cart_id: cartId,
+        cart_id: currentCartId,
         address_id: selectedAddressId,
         coupon_code: couponApplied?.code || null,
         notes: notes || null,
@@ -196,6 +273,17 @@ const CheckoutV2 = () => {
       const encodedLink = encodeURIComponent(linkRes.payment_link_url);
       window.location.href = `http://localhost:3001/hh-pay?link=${encodedLink}&order=${order_number}`;
     } catch (err) {
+      if (err === "sessionTimeout") {
+        localStorage.removeItem("Token");
+        navigate("/login", {
+          replace: true,
+          state: {
+            from: "/checkout",
+            message: "Please login again to continue checkout",
+          },
+        });
+        return;
+      }
       toast.error(err?.message || "Could not place order");
       setPlacingOrder(false);
     }
@@ -206,7 +294,7 @@ const CheckoutV2 = () => {
       <PageTitle
         title="Check Out"
         subtitle="Review your cart, choose an address, and complete your purchase."
-        bgImage="collections-banner.jpg"
+        bgImage="cartCheckoutBanner.png"
       />
 
       <section className="flat-spacing-11">
@@ -463,9 +551,17 @@ const CheckoutV2 = () => {
                       </li>
                     ) : orderItems.length > 0 ? (
                       orderItems.map((item) => (
-                        <li className="checkout-product-item" key={item.id}>
+                          <li className="checkout-product-item" key={item.id}>
                           <figure className="img-product">
-                            <img src={item.image} alt={item.title} />
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src =
+                                  "/assets/images/product-placeholder.svg";
+                              }}
+                            />
                             <span className="quantity">{item.quantity}</span>
                           </figure>
                           <div className="content">

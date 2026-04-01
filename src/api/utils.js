@@ -46,6 +46,8 @@ export const DISCOUNTS = `${HOST}/api/discounts/apply`;
 export const ORDERS = `${HOST}/api/orders`;
 export const PAYMENTS = `${HOST}/api/payments`;
 
+let sessionTimeoutHandled = false;
+
 export const saveFcmToken = (fcm) => {
   localStorage.setItem("fcmToken", fcm);
 };
@@ -99,7 +101,17 @@ export const returnOrThrow = async (resJSON) => {
   let result;
   const status = resJSON.status;
   if (status === 401) {
-    showErrorMessage("Session expired. Logging you out in a few seconds");
+    if (!sessionTimeoutHandled) {
+      sessionTimeoutHandled = true;
+      localStorage.removeItem("Token");
+      localStorage.removeItem("userType");
+      showErrorMessage("Session expired. Logging you out in a few seconds");
+      if (window.location.pathname !== "/login") {
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1200);
+      }
+    }
     throw "sessionTimeout";
   } else if (status === 404 || status >= 500) {
     throw `Something went wrong! Status: ${status}`;

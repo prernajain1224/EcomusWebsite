@@ -7,20 +7,20 @@ const NAV_ITEMS = [
   {
     label: "Boys",
     dropdown: [
-      { label: "T-Shirts", path: "/shop?gender=boys&product_type=tshirt" },
+      { label: "T-Shirts", path: "/shop?gender=male&product_type=TShirt" },
     ],
   },
   {
     label: "Girls",
     dropdown: [
-      { label: "T-Shirts", path: "/shop?gender=girls&product_type=tshirt" },
+      { label: "T-Shirts", path: "/shop?gender=female&product_type=TShirt" },
     ],
   },
   {
     label: "Infants",
     dropdown: [
-      { label: "T-Shirts", path: "/shop?gender=infants&product_type=tshirt" },
-      { label: "Rompers", path: "/shop?gender=infants&product_type=romper" },
+      { label: "T-Shirts", path: "/shop?gender=male&product_type=TShirt" },
+      { label: "Rompers", path: "/shop?gender=male&product_type=romper" },
     ],
   },
   { label: "Blogs", path: "/blogs" },
