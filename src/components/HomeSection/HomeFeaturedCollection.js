@@ -6,8 +6,9 @@ import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import ProductCard from "../ProductCard";
 
-const HalloweenCollection = () => {
+const HomeFeaturedCollection = () => {
   // Halloween products data array
   const halloweenProducts = [
     {
@@ -104,69 +105,7 @@ const HalloweenCollection = () => {
             >
               {halloweenProducts.map((product) => (
                 <SwiperSlide key={product.id} lazy="true">
-                  <div className="card-product">
-                    <div className="card-product-wrapper">
-                      <a href="product-details" className="product-img">
-                        <img
-                          className="lazyload img-product"
-                          data-src={product.mainImage}
-                          src={product.mainImage}
-                          alt={product.name}
-                        />
-                        <img
-                          className="lazyload img-hover"
-                          data-src={product.hoverImage}
-                          src={product.hoverImage}
-                          alt={product.name}
-                        />
-                      </a>
-                      <div className="list-product-btn absolute-2">
-                        <a
-                          href="#shoppingCart"
-                          data-bs-toggle="modal"
-                          className="box-icon bg_white quick-add tf-btn-loading"
-                        >
-                          <span className="icon icon-bag"></span>
-                          <span className="tooltip">Add to cart</span>
-                        </a>
-                        <a
-                          href="javascript:void(0);"
-                          className="box-icon bg_white wishlist btn-icon-action"
-                        >
-                          <span className="icon icon-heart"></span>
-                          <span className="tooltip">Add to Wishlist</span>
-                          <span className="icon icon-delete"></span>
-                        </a>
-                        <a
-                          href="#compare"
-                          data-bs-toggle="offcanvas"
-                          aria-controls="offcanvasLeft"
-                          className="box-icon bg_white compare btn-icon-action"
-                        >
-                          <span className="icon icon-compare"></span>
-                          <span className="tooltip">Add to Compare</span>
-                          <span className="icon icon-check"></span>
-                        </a>
-                        <a
-                          href="#quick_view"
-                          data-bs-toggle="modal"
-                          className="box-icon bg_white quickview tf-btn-loading"
-                        >
-                          <span className="icon icon-view"></span>
-                          <span className="tooltip">Quick View</span>
-                        </a>
-                      </div>
-                    </div>
-                    <div className="card-product-info">
-                      <a
-                        href="product-details"
-                        className="title link text_white"
-                      >
-                        {product.name}
-                      </a>
-                      <span className="price text_white">{product.price}</span>
-                    </div>
-                  </div>
+                  <ProductCard product={product} />
                 </SwiperSlide>
               ))}
             </Swiper>
@@ -192,4 +131,4 @@ const HalloweenCollection = () => {
   );
 };
 
-export default HalloweenCollection;
+export default HomeFeaturedCollection;

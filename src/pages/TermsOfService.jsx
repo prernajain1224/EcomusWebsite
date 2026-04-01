@@ -1,6 +1,6 @@
 import { PageTitle } from "../components/PageTitle";
 
-export const TermsOfService = () => {
+const TermsOfService = () => {
   return (
     <>
       <PageTitle
@@ -123,3 +123,4 @@ export const TermsOfService = () => {
     </>
   );
 };
+export default TermsOfService;

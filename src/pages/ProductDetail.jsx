@@ -522,8 +522,6 @@ const ProductDetail = () => {
                             </div>
                           </SwiperSlide>
                         ))}
-                        <div className="swiper-button-next button-style-arrow thumbs-next" />
-                        <div className="swiper-button-prev button-style-arrow thumbs-prev" />
                       </Swiper>
                     </div>
                   ) : (

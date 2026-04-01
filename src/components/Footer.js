@@ -75,7 +75,7 @@ const Footer = () => {
                 </div>
                 <ul className="footer-menu-list tf-collapse-content">
                   <li>
-                    <Link to="/products" className="footer-menu_item">
+                    <Link to="/shop" className="footer-menu_item">
                       All Products
                     </Link>
                   </li>

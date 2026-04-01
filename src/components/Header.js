@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useCartStore } from "../store/cartStore";
 
 /**
  * Header Component
@@ -45,6 +46,15 @@ const NAV_ITEMS = [
 const Header = ({ onCartOpen, onSearchOpen, onMobileMenuOpen }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const isLoggedIn = !!localStorage.getItem("Token");
+  const initCart = useCartStore((state) => state.initCart);
+  const cartItemsCount = useCartStore(
+    (state) =>
+      state.cartData?.items_count ?? state.cartData?.items?.length ?? 0,
+  );
+
+  useEffect(() => {
+    initCart();
+  }, [initCart]);
 
   return (
     <header id="header" className="header-default">
@@ -195,7 +205,7 @@ const Header = ({ onCartOpen, onSearchOpen, onMobileMenuOpen }) => {
                   }}
                 >
                   <i className="icon icon-bag" />
-                  <span className="count-box">0</span>
+                  <span className="count-box">{cartItemsCount}</span>
                 </Link>
               </li>
             </ul>

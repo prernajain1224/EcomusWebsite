@@ -2,28 +2,29 @@ import logo from "../logo.svg";
 import "../App.css";
 import TopSlider from "../components/HomeSection/TopSlider";
 import ShopCategories from "../components/HomeSection/ShopCategories";
-import MasonryCollection from "../components/HomeSection/MasonryCollection";
+import FeaturedCollections from "../components/HomeSection/FeaturedCollections";
 import ProductTabs from "../components/HomeSection/ProductTabs";
 import BannerSlider from "../components/HomeSection/BannerSlider";
 import IconBoxSlider from "../components/HomeSection/IconBoxSlider";
-import HalloweenCollection from "../components/HomeSection/HalloweenCollection";
 import Marquee from "../components/HomeSection/Marquee";
 import CustomerReviews from "../components/HomeSection/CustomerReviews";
-import Brand from "../components/HomeSection/Brand";
+import OurValues from "../components/HomeSection/OurValues";
+import { Link } from "react-router-dom";
+import HomeFeaturedCollection from "../components/HomeSection/HomeFeaturedCollection";
+
 const Home = () => {
   return (
     <>
       <TopSlider />
       <ShopCategories />
-      <MasonryCollection />
+
+      <FeaturedCollections />
       <ProductTabs />
-      <BannerSlider />
       <IconBoxSlider />
       <Marquee />
-
-      <HalloweenCollection />
+      {/* <HomeFeaturedCollection /> */}
       <CustomerReviews />
-      <Brand />
+      <OurValues />
     </>
   );
 };

@@ -1,6 +1,6 @@
 import { PageTitle } from "../components/PageTitle";
 
-export const ReturnPolicy = () => {
+const ReturnPolicy = () => {
   return (
     <>
       <PageTitle
@@ -117,3 +117,4 @@ export const ReturnPolicy = () => {
     </>
   );
 };
+export default ReturnPolicy;

@@ -19,8 +19,10 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [recoverEmail, setRecoverEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const hasTriggeredVerify = useRef(false);
   const hasShownLoginMessage = useRef(false);
+  const returnTo = location.state?.from || "/";
 
   const showMessage = (text) => setMessage(text || "");
 
@@ -87,7 +89,7 @@ const Login = () => {
       localStorage.setItem("Token", token);
       localStorage.setItem("userType", "Customer");
       showMessage("");
-      navigate("/", { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (err) {
       showMessage(err?.message || err || "Invalid credentials");
     } finally {
@@ -154,15 +156,89 @@ const Login = () => {
                 <label className="tf-field-label">Email or mobile *</label>
               </div>
 
-              <div className="tf-field style-1 mb_30">
+              <div
+                className="tf-field style-1 mb_30"
+                style={{ position: "relative" }}
+              >
                 <input
                   className="tf-field-input tf-input"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  style={{ paddingRight: "44px" }}
                 />
                 <label className="tf-field-label">Password *</label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  style={{
+                    position: "absolute",
+                    right: "14px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    color: "#8a8a8a",
+                    opacity: 0.75,
+                  }}
+                >
+                  {!showPassword ? (
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M3 3L21 21"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M10.58 10.58A2 2 0 0 0 13.42 13.42"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M9.36 5.37A10.94 10.94 0 0 1 12 5c5 0 9.27 3.11 11 7-0.59 1.31-1.46 2.5-2.54 3.5M6.61 6.61C4.62 7.93 3.15 9.84 2 12c1.73 3.89 6 7 10 7 1.12 0 2.2-0.16 3.23-0.46"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M2 12C3.73 8.11 7 5 12 5s8.27 3.11 10 7c-1.73 3.89-5 7-10 7s-8.27-3.11-10-7Z"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                      />
+                    </svg>
+                  )}
+                </button>
               </div>
 
               <div className="mb_20">

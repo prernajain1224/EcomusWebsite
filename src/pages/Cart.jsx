@@ -4,6 +4,7 @@ import Testimonial from "../components/Testimonial";
 import YouMayProduct from "../components/YouMayProduct";
 import { useCartStore } from "../store/cartStore";
 import { PageTitle } from "../components/PageTitle";
+import CustomerReviews from "../components/HomeSection/CustomerReviews";
 
 const Cart = () => {
   const initCart = useCartStore((state) => state.initCart);
@@ -53,7 +54,7 @@ const Cart = () => {
         onUpdateQuantity={updateQty}
         onRemoveItem={removeFromCart}
       />
-      <Testimonial />
+      <CustomerReviews />
       <YouMayProduct />
     </>
   );

@@ -18,13 +18,16 @@ import Collections from "./pages/Collections";
 import Cart from "./pages/Cart";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import { ShippingPolicy } from "./pages/ShippingPolicy";
+import CheckoutV2 from "./pages/CheckoutV2";
+import OrderSuccess from "./pages/OrderSuccess";
+import OrderFailed from "./pages/OrderFailed";
+import ShippingPolicy from "./pages/ShippingPolicy";
 import Contact from "./pages/Contact";
 import BlogsList from "./pages/BlogsList";
 import BlogDetail from "./pages/BlogDetail";
-import { ReturnPolicy } from "./pages/ReturnPolicy";
-import { CookiesPolicy } from "./pages/CookiesPolicy";
-import { TermsOfService } from "./pages/TermsOfService";
+import ReturnPolicy from "./pages/ReturnPolicy";
+import CookiesPolicy from "./pages/CookiesPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import ForgotPassword from "./pages/ForgotPassword";
 import MyAccount from "./pages/MyAccount";
 import Orders from "./pages/Orders";
@@ -68,6 +71,9 @@ export default function App() {
             <Route path="/collections" element={<Collections />} />
 
             <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<CheckoutV2 />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/order-failed" element={<OrderFailed />} />
 
             <Route path="/login" element={<Login />} />
             <Route path="/verify-email" element={<Login />} />
@@ -171,6 +177,7 @@ const AppHead = () => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
       <link rel="shortcut icon" href="#" type="image/x-icon" />
+      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     </>
   );
 };

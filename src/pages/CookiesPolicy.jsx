@@ -1,6 +1,6 @@
 import { PageTitle } from "../components/PageTitle";
 
-export const CookiesPolicy = () => {
+const CookiesPolicy = () => {
   return (
     <>
       <PageTitle
@@ -63,12 +63,12 @@ export const CookiesPolicy = () => {
               <a href="mailto:hello@huehoppers.com">hello@huehoppers.com</a> or
               call <a href="tel:+919958920231">+91 99589 20231</a>.
             </p>
-            <p>
-              HueHoppers | New Delhi, India | Effective Date: March 2026
-            </p>
+            <p>HueHoppers | New Delhi, India | Effective Date: March 2026</p>
           </div>
         </div>
       </section>
     </>
   );
 };
+
+export default CookiesPolicy;

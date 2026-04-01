@@ -5,6 +5,7 @@ import { Pagination } from "swiper/modules";
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/pagination";
+import { Link } from "react-router-dom";
 
 const BannerSlider = () => {
   // Banner data array
@@ -22,18 +23,19 @@ const BannerSlider = () => {
       id: 2,
       title: "More Than Just Clothes!",
       subtitle:
-        "“HueHoppers was born at home - from three little ones, three moods, and one beautiful realization. Every child deserves to wear how they feel.”",
+        "HueHoppers was born at home - from three little ones, three moods, and one beautiful realization. Every child deserves to wear how they feel.",
       image: "/assets/images/pageBanners/aboutBanner.png",
       link: "/about",
       buttonText: "Read Our Story",
     },
     {
       id: 3,
-      title: "Custom Pet Portrait",
-      subtitle: "Start from $30",
-      image: "/assets/images/collections/pod-store-7.jpg",
+      title: "What's Your Hue Today?",
+      subtitle:
+        "Because your little one isn't just one mood - and their wardrobe shouldn't be either",
+      image: "/assets/images/heroBanner.png",
       link: "shop",
-      buttonText: "Shop now",
+      buttonText: "Discover Your Hue",
     },
   ];
 
@@ -66,47 +68,42 @@ const BannerSlider = () => {
         >
           {banners.map((banner) => (
             <SwiperSlide key={banner.id} lazy="true">
-              <div className="collection-item-v2 hover-img">
-                <a href={banner.link} className="collection-inner">
-                  <div className="collection-image radius-10 img-style">
+              <div className="card-product">
+                <div
+                  className="card-product-wrapper"
+                  style={{ height: "20rem", width: "100%", borderRadius: 10 }}
+                >
+                  <Link
+                    to={banner.link}
+                    className="product-img"
+                    style={{ height: "20rem", borderRadius: 10 }}
+                  >
                     <img
-                      style={{ height: "25rem" }}
-                      className="lazyload"
-                      data-src={banner.image}
+                      loading="lazy"
+                      style={{ height: "20rem", borderRadius: 10 }}
+                      decoding="async"
+                      className="lazyload img-product"
                       src={banner.image}
                       alt={banner.title}
                     />
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      backgroundColor: "rgba(0, 0, 0, 0.3)",
-                      zIndex: 1,
-                    }}
-                  >
-                    <div
-                      className="collection-content"
-                      style={{ justifyContent: "flex-end" }}
-                    >
-                      <div className="top wow fadeInUp" data-wow-delay="0s">
-                        <h5 className="heading text_white">{banner.title}</h5>
-                        <p className="subheading text_white">
-                          {banner.subtitle}
-                        </p>
-                      </div>
-                      <div className="bottom wow fadeInUp" data-wow-delay="0s">
-                        <button className="tf-btn text-align-center btn-fill collection-other-link fw-6">
-                          <span>{banner.buttonText}</span>{" "}
-                          <i
-                            style={{ paddingLeft: 10 }}
-                            className="icon icon-arrow1-top-left"
-                          ></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </a>
+                    <img
+                      loading="lazy"
+                      style={{ height: "20rem", borderRadius: 10 }}
+                      decoding="async"
+                      className="lazyload img-hover"
+                      src={banner.image}
+                      alt={banner.title}
+                    />
+                  </Link>
+
+                  {/* Sale badge */}
+                </div>
+                <div className="card-product-info">
+                  <Link to={banner.link} className="title link">
+                    {banner.title}
+                  </Link>
+                  <span className="price current-price">{banner.subtitle}</span>
+                </div>
               </div>
             </SwiperSlide>
           ))}

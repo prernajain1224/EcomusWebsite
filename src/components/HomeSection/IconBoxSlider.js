@@ -11,26 +11,26 @@ const IconBoxSlider = () => {
   const iconBoxes = [
     {
       id: 1,
-      icon: "icon-shipping fs-22",
+      icon: "/assets/images/shopping-cart.png",
       title: "Free Shipping",
       description: "Free Shipping on orders ₹499+",
     },
 
     {
       id: 2,
-      icon: "icon-heart fs-22",
+      icon: "/assets/images/heart.png",
       title: "Color Retention",
       description: "Colors That Stay Vivid, Wash After Wash",
     },
     {
       id: 3,
-      icon: "icon-return fs-22",
+      icon: "/assets/images/download-speed.png",
       title: "7 Day Returns",
       description: "Simple & Fast 7-Day Returns",
     },
     {
       id: 4,
-      icon: "icon-suport fs-22",
+      icon: "/assets/images/megaphone.png",
       title: "Parents Approved",
       description: "Kids Approved. Parent Trusted.",
     },
@@ -38,8 +38,8 @@ const IconBoxSlider = () => {
 
   return (
     <section
-      style={{ backgroundColor: "#3a00ac" }}
-      className="flat-spacing-9 flat-iconbox wow fadeInUp mt-xxl-5"
+      // style={{ backgroundColor: "#3a00ac" }}
+      className="flat-spacing-9 flat-iconbox wow fadeInUp"
       data-wow-delay="0s"
     >
       <div className="container">
@@ -73,13 +73,17 @@ const IconBoxSlider = () => {
               <SwiperSlide key={box.id}>
                 <div className="tf-icon-box style-border-line text-center">
                   <div className="icon">
-                    <i className={box.icon} style={{ color: "#fff" }}></i>
+                    <img
+                      src={box.icon}
+                      alt={box.title}
+                      style={{ height: 50, width: 50 }}
+                    />
                   </div>
                   <div className="content">
-                    <div style={{ color: "#fff" }} className="title">
+                    <div style={{}} className="title">
                       {box.title}
                     </div>
-                    <p style={{ color: "#fff" }}>{box.description}</p>
+                    <p style={{}}>{box.description}</p>
                   </div>
                 </div>
               </SwiperSlide>

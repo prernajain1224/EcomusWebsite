@@ -1,20 +1,17 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { registerUser } from "../api/login";
-import { showErrorMessage, showSuccessMessage } from "../utils";
 import { PageTitle } from "../components/PageTitle";
+import { Link } from "react-router-dom";
 
 const Register = () => {
-  const navigate = useNavigate();
   const [form, setForm] = useState({
-    name: "",
-    mobile: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
+  // handle input change
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -22,45 +19,13 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  // handle submit
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setMessage("");
 
-    if (!form.name.trim()) return setMessage("Full name is required");
-    if (!/^\d{10}$/.test(form.mobile))
-      return setMessage("Mobile number must be exactly 10 digits");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      return setMessage("Enter a valid email address");
-    if (!form.password) return setMessage("Password is required");
+    console.log("Form Data:", form);
 
-    try {
-      setLoading(true);
-      const res = await registerUser({
-        name: form.name.trim(),
-        email: form.email.trim(),
-        mobile: form.mobile,
-        password: form.password,
-      });
-      const token = res?.token || res?.data?.token;
-      if (token) {
-        localStorage.setItem("Token", token);
-        localStorage.setItem("userType", "Customer");
-      }
-      const message =
-        res?.message ||
-        "Registration successful. Please check your email to verify your account.";
-      showSuccessMessage(message);
-      navigate("/login", {
-        replace: true,
-        state: { message },
-      });
-    } catch (err) {
-      const errorMessage = err?.message || err || "Registration failed";
-      setMessage(errorMessage);
-      showErrorMessage(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    // 👉 yaha API call kar sakta hai (Django backend)
   };
 
   return (
@@ -68,7 +33,7 @@ const Register = () => {
       {/* Page Title */}
       <PageTitle
         title="Register"
-        subtitle={"Join the Hop! Your hue journey starts here!"}
+        subtitle="Join the Hop! Your hue journey starts here!"
         bgImage="loginSignupBanner.png"
       />
 
@@ -84,29 +49,31 @@ const Register = () => {
             </div>
 
             <form onSubmit={handleSubmit}>
+              {/* First Name */}
               <div className="tf-field style-1 mb_15">
                 <input
                   className="tf-field-input tf-input"
                   type="text"
-                  name="name"
-                  value={form.name}
+                  name="firstName"
+                  value={form.firstName}
                   onChange={handleChange}
                 />
-                <label className="tf-field-label">Full name *</label>
+                <label className="tf-field-label">First name</label>
               </div>
 
+              {/* Last Name */}
               <div className="tf-field style-1 mb_15">
                 <input
                   className="tf-field-input tf-input"
-                  type="tel"
-                  name="mobile"
-                  value={form.mobile}
+                  type="text"
+                  name="lastName"
+                  value={form.lastName}
                   onChange={handleChange}
-                  maxLength={10}
                 />
-                <label className="tf-field-label">Mobile number *</label>
+                <label className="tf-field-label">Last name</label>
               </div>
 
+              {/* Email */}
               <div className="tf-field style-1 mb_15">
                 <input
                   className="tf-field-input tf-input"
@@ -119,36 +86,103 @@ const Register = () => {
               </div>
 
               {/* Password */}
-              <div className="tf-field style-1 mb_30">
+              <div
+                className="tf-field style-1 mb_30"
+                style={{ position: "relative" }}
+              >
                 <input
                   className="tf-field-input tf-input"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   value={form.password}
                   onChange={handleChange}
+                  style={{ paddingRight: "44px" }}
                 />
                 <label className="tf-field-label">Password *</label>
-              </div>
-              {message ? (
-                <p className="mb_20" style={{ color: "#b42318" }}>
-                  {message}
-                </p>
-              ) : null}
-
-              <div className="mb_20">
                 <button
-                  type="submit"
-                  className="tf-btn w-100 text-align-center btn-fill"
-                  disabled={loading}
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  style={{
+                    position: "absolute",
+                    right: "14px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    color: "#8a8a8a",
+                    opacity: 0.75,
+                  }}
                 >
-                  {loading ? "Creating..." : "Register"}
+                  {!showPassword ? (
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M3 3L21 21"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M10.58 10.58A2 2 0 0 0 13.42 13.42"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M9.36 5.37A10.94 10.94 0 0 1 12 5c5 0 9.27 3.11 11 7-0.59 1.31-1.46 2.5-2.54 3.5M6.61 6.61C4.62 7.93 3.15 9.84 2 12c1.73 3.89 6 7 10 7 1.12 0 2.2-0.16 3.23-0.46"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M2 12C3.73 8.11 7 5 12 5s8.27 3.11 10 7c-1.73 3.89-5 7-10 7s-8.27-3.11-10-7Z"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                      />
+                    </svg>
+                  )}
                 </button>
               </div>
 
+              {/* Submit */}
+              <div className="mb_20">
+                <button type="submit" className="tf-btn w-100 btn-fill">
+                  Register
+                </button>
+              </div>
+
+              {/* Login Link */}
               <div className="text-center">
                 <Link to="/login" className="tf-btn btn-line">
                   Already have an account? Log in here{" "}
-                  <i className="icon icon-arrow1-top-left"></i>
+                  <i class="icon icon-arrow1-top-left"></i>
                 </Link>
               </div>
             </form>

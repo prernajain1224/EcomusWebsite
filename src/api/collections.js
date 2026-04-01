@@ -11,3 +11,8 @@ export const getCollectionDetails = async (slug) => {
   const result = await returnOrThrow(resJSON);
   return result;
 };
+
+export const getFeaturedCollections = async () => {
+  const resJSON = await getWrapper(`${COLLECTIONS}?featured=true`);
+  return returnOrThrow(resJSON);
+};

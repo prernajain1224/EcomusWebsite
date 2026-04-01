@@ -2,7 +2,30 @@ import { Link } from "react-router-dom";
 import { getImageUrl } from "../api/utils";
 
 const FALLBACK_IMAGE = "/assets/images/product-placeholder.svg";
+
+const StarRating = ({ rating, count }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div style={{ display: "flex", gap: 2 }}>
+      {[1, 2, 3, 4, 5].map((s) => (
+        <span
+          key={s}
+          style={{
+            fontSize: 16,
+            color: s <= Math.round(rating) ? "#f5a623" : "#ddd",
+          }}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+    <span style={{ fontSize: 13, color: "#888" }}>
+      ({count} {count === 1 ? "review" : "reviews"})
+    </span>
+  </div>
+);
+
 const ProductCard = ({ product }) => {
+  console.log("Rendering ProductCard for:", product);
   const { slug, display_image, name, price, compare_price, avg_rating } =
     product;
 
@@ -58,19 +81,16 @@ const ProductCard = ({ product }) => {
             }}
           />
         </Link>
-        <div className="list-product-btn absolute-2">
-          <Link
-            to={`/products/${product.slug}`}
-            className="box-icon bg_white quickview tf-btn-loading"
-          >
-            <span className="icon icon-view" />
-            <span className="tooltip">Quick View</span>
-          </Link>
-        </div>
+
         {/* Sale badge */}
         {onSale && (
           <div className="on-sale-wrap text-end">
-            <div className="on-sale-item">-{discount}%</div>
+            <div
+              className="on-sale-item"
+              style={{ backgroundColor: "#3a00ac" }}
+            >
+              -{discount}%
+            </div>
           </div>
         )}
       </div>
@@ -94,6 +114,10 @@ const ProductCard = ({ product }) => {
             </span>
           )}
         </span>
+        <StarRating
+          rating={Number(product.avg_rating ?? 0)}
+          count={product.reviews_count ?? 0}
+        />
       </div>
     </div>
   );

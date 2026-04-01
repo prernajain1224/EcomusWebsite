@@ -154,7 +154,7 @@ const OrderDetails = () => {
             <div className="col-lg-9">
               {/* Back link */}
               <div className="mb_20">
-                <Link to="/account/orders" className="tf-btn btn-line fw-6">
+                <Link to="/my-account/orders" className="tf-btn btn-line fw-6">
                   ← Back to Orders
                 </Link>
               </div>
@@ -183,7 +183,7 @@ const OrderDetails = () => {
                     Order not found.
                   </p>
                   <Link
-                    to="/account/orders"
+                    to="/my-account/orders"
                     className="tf-btn btn-fill animate-hover-btn"
                   >
                     Back to Orders

@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../components/PageTitle";
-import { getProducts } from "../api/products";
+import { getProducts, getFilters } from "../api/products";
 import { getImageUrl } from "../api/utils";
 import { OK, showErrorMessage } from "../utils";
 import ProductFilters from "../components/ProductFilters";
-import Loading from "../components/Loading";
 import ProductCard from "../components/ProductCard";
 
 const FALLBACK_IMAGE = "/assets/images/product-placeholder.svg";
@@ -57,8 +56,11 @@ const Products = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("menu_order");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [productTypes, setProductTypes] = useState([]);
+  const [productTypesLoading, setProductTypesLoading] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
     categories: [],
+    product_types: [],
     sizes: [],
     colors: [],
     priceRange: [0, 5000],
@@ -67,6 +69,116 @@ const Products = () => {
   const sentinelRef = useRef(null);
   const isFetchingRef = useRef(false);
   const filtersRef = useRef(activeFilters);
+
+  const normalizeProductTypes = (res) => {
+    const raw =
+      res?.product_types ||
+      res?.productTypes ||
+      res?.types ||
+      res?.categories ||
+      res?.filters?.product_types ||
+      res?.data?.product_types ||
+      [];
+
+    if (!Array.isArray(raw)) return [];
+
+    return raw
+      .map((item) => {
+        if (!item) return null;
+        if (typeof item === "string") {
+          return { label: item, value: item, count: null };
+        }
+        return {
+          label:
+            item.name ||
+            item.title ||
+            item.label ||
+            item.product_type ||
+            item.value ||
+            "Product type",
+          value:
+            item.slug ||
+            item.code ||
+            item.product_type ||
+            item.value ||
+            item.id ||
+            item.name ||
+            item.title ||
+            "",
+          count:
+            item.count ??
+            item.total ??
+            item.products_count ??
+            item.product_count ??
+            null,
+        };
+      })
+      .filter((item) => item?.label);
+  };
+
+  const isProductOnSale = (product) => {
+    if (!product) return false;
+
+    const sizeSaleExists = Array.isArray(product.product_sizes)
+      ? product.product_sizes.some((size) => {
+          const selling = Number(size?.price ?? size?.selling_price ?? 0);
+          const original = Number(
+            size?.original_price ??
+              size?.mrp ??
+              size?.compare_at_price ??
+              size?.regular_price ??
+              size?.compare_price ??
+              0,
+          );
+          return original > 0 && selling > 0 && original > selling;
+        })
+      : false;
+
+    return Boolean(
+      product.is_sale ||
+      product.isSale ||
+      product.on_sale ||
+      product.sale_price ||
+      product.discount_price ||
+      product.compare_price > product.price ||
+      product.comparePrice > product.price ||
+      product.sale_percent ||
+      product.sale_percentage ||
+      product.discount_percent ||
+      sizeSaleExists ||
+      Number(
+        product.compare_price ||
+          product.comparePrice ||
+          product.compare_at_price ||
+          product.original_price ||
+          0,
+      ) > Number(product.price || 0),
+    );
+  };
+
+  const getProductImage = (product) =>
+    getImageUrl(
+      product?.display_image ||
+        product?.image ||
+        product?.product_images?.[0]?.image_url ||
+        product?.product_images?.[0]?.url ||
+        product?.product_images?.[0] ||
+        FALLBACK_IMAGE,
+    );
+
+  const getRandomSaleProducts = (list = []) => {
+    const saleItems = list.filter(isProductOnSale);
+    if (saleItems.length <= 3) return saleItems;
+
+    const shuffled = [...saleItems].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
+  };
+
+  const getRandomGalleryProducts = (list = []) => {
+    if (list.length <= 6) return list;
+    const shuffled = [...list].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 6);
+  };
 
   // Read URL params on mount (gender, category, search)
   const gender = searchParams.get("gender") || "";
@@ -82,9 +194,101 @@ const Products = () => {
     setHasMore(true);
   };
 
+  const handleProductTypeClick = (type) => {
+    const value = type?.value || "";
+    if (!value) return;
+
+    handleFilterChange({
+      ...activeFilters,
+      product_types: [value],
+    });
+  };
+
+  const removeFilterValue = (key, value) => {
+    const nextValues = (activeFilters[key] || []).filter(
+      (item) => item !== value,
+    );
+    handleFilterChange({
+      ...activeFilters,
+      [key]: nextValues,
+    });
+  };
+
+  const clearAllFilters = () => {
+    handleFilterChange({
+      categories: [],
+      product_types: [],
+      genders: [],
+      collections: [],
+      sizes: [],
+      colors: [],
+      priceRange: [0, 5000],
+    });
+  };
+
+  const activeChips = [
+    ...(activeFilters.product_types || []).map((value) => ({
+      key: `product_types:${value}`,
+      label: `Type: ${value}`,
+      onRemove: () => removeFilterValue("product_types", value),
+    })),
+    ...(activeFilters.genders || []).map((value) => ({
+      key: `genders:${value}`,
+      label: `Gender: ${value}`,
+      onRemove: () => removeFilterValue("genders", value),
+    })),
+    ...(activeFilters.collections || []).map((value) => ({
+      key: `collections:${value}`,
+      label: `Collection: ${value}`,
+      onRemove: () => removeFilterValue("collections", value),
+    })),
+    ...(activeFilters.categories || []).map((value) => ({
+      key: `categories:${value}`,
+      label: `Category: ${value}`,
+      onRemove: () => removeFilterValue("categories", value),
+    })),
+    ...(activeFilters.sizes || []).map((value) => ({
+      key: `sizes:${value}`,
+      label: `Size: ${value}`,
+      onRemove: () => removeFilterValue("sizes", value),
+    })),
+    ...(activeFilters.colors || []).map((value) => ({
+      key: `colors:${value}`,
+      label: `Color: ${value}`,
+      onRemove: () => removeFilterValue("colors", value),
+    })),
+  ];
+
+  const saleProducts = getRandomSaleProducts(products);
+  const galleryProducts = getRandomGalleryProducts(products);
+
   useEffect(() => {
     loadProducts(currentPage);
   }, [currentPage, activeFilters, sortBy]);
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadProductTypes = async () => {
+      try {
+        setProductTypesLoading(true);
+        const res = await getFilters();
+        if (!alive) return;
+        setProductTypes(normalizeProductTypes(res));
+      } catch {
+        if (!alive) return;
+        setProductTypes([]);
+      } finally {
+        if (alive) setProductTypesLoading(false);
+      }
+    };
+
+    loadProductTypes();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const loadProducts = async (page) => {
     if (isFetchingRef.current) return;
@@ -95,6 +299,9 @@ const Products = () => {
       const f = filtersRef.current;
       const res = await getProducts(page, {
         categories: f.categories.join(","),
+        product_type: (f.product_types || []).join(","),
+        gender: (f.genders || []).join(","),
+        collection_id: (f.collections || []).join(","),
         sizes: f.sizes.join(","),
         colors: f.colors.join(","),
         price_min: f.priceRange[0],
@@ -191,6 +398,53 @@ const Products = () => {
               </select>
             </div>
           </div>
+
+          {activeChips.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                flexWrap: "wrap",
+                alignItems: "center",
+                margin: "0 0 18px",
+              }}
+            >
+              {activeChips.map((chip) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  onClick={chip.onRemove}
+                  style={{
+                    border: "1px solid #ddd",
+                    background: "#fff",
+                    borderRadius: 999,
+                    padding: "8px 12px",
+                    fontSize: 12,
+                    color: "#2c3a34",
+                    cursor: "pointer",
+                  }}
+                >
+                  {chip.label} ×
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                style={{
+                  border: "1px solid #000",
+                  background: "#000",
+                  borderRadius: 999,
+                  padding: "8px 12px",
+                  fontSize: 12,
+                  color: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
           <div class="tf-row-flex">
             <aside className="tf-shop-sidebar wrap-sidebar-mobile">
               <div className="widget-facet wd-categories">
@@ -201,36 +455,54 @@ const Products = () => {
                   aria-expanded="true"
                   aria-controls="categories"
                 >
-                  <span>Product categories</span>
+                  <span>Product Types</span>
                   <span className="icon icon-arrow-up" />
                 </div>
                 <div id="categories" className="collapse show">
                   <ul className="list-categoris current-scrollbar mb_36">
-                    <li className="cate-item current">
-                      <a href="#">
-                        <span>Fashion</span>&nbsp;<span>(31)</span>
-                      </a>
-                    </li>
-                    <li className="cate-item">
-                      <a href="#">
-                        <span>Men</span>&nbsp;<span>(9)</span>
-                      </a>
-                    </li>
-                    <li className="cate-item">
-                      <a href="#">
-                        <span>Women</span>&nbsp;<span>(23)</span>
-                      </a>
-                    </li>
-                    <li className="cate-item">
-                      <a href="#">
-                        <span>Denim</span>&nbsp;<span>(20)</span>
-                      </a>
-                    </li>
-                    <li className="cate-item">
-                      <a href="#">
-                        <span>Dress</span>&nbsp;<span>(23)</span>
-                      </a>
-                    </li>
+                    {productTypesLoading ? (
+                      <li className="cate-item current">
+                        <span>Loading product types...</span>
+                      </li>
+                    ) : productTypes.length > 0 ? (
+                      productTypes.map((type, index) => (
+                        <li
+                          className={`cate-item ${index === 0 ? "current" : ""}`}
+                          key={`${type.value || type.label}-${index}`}
+                        >
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleProductTypeClick(type);
+                            }}
+                            aria-current={
+                              activeFilters.product_types.includes(type.value)
+                                ? "true"
+                                : undefined
+                            }
+                            style={{
+                              fontWeight: activeFilters.product_types.includes(
+                                type.value,
+                              )
+                                ? 600
+                                : 400,
+                            }}
+                          >
+                            <span>{type.label}</span>
+                            {type.count !== null && type.count !== undefined ? (
+                              <>
+                                &nbsp;<span>({type.count})</span>
+                              </>
+                            ) : null}
+                          </a>
+                        </li>
+                      ))
+                    ) : (
+                      <li className="cate-item current">
+                        <span>No product types found</span>
+                      </li>
+                    )}
                   </ul>
                 </div>
               </div>
@@ -247,60 +519,62 @@ const Products = () => {
                 </div>
                 <div id="sale-products" className="collapse show">
                   <div className="widget-featured-products mb_36">
-                    <div className="featured-product-item">
-                      <a
-                        href="product-detail.html"
-                        className="card-product-wrapper"
-                      >
-                        <img
-                          className="lazyload img-product"
-                          data-src="images/products/img-feature-1.png"
-                          alt="image-feature"
-                        />
-                      </a>
-                      <div className="card-product-info">
-                        <a href="#" className="title link">
-                          Jersey thong body
-                        </a>
-                        <span className="price">$105.95</span>
+                    {saleProducts.length > 0 ? (
+                      saleProducts.map((product) => {
+                        const image = getProductImage(product);
+                        const title =
+                          product.name || product.title || "Product";
+                        const price = Number(product.price || 0);
+
+                        return (
+                          <div
+                            className="featured-product-item"
+                            key={product.id}
+                          >
+                            <a
+                              href={
+                                product.slug ? `/products/${product.slug}` : "#"
+                              }
+                              className="card-product-wrapper"
+                              onClick={(e) => {
+                                if (!product.slug) e.preventDefault();
+                              }}
+                            >
+                              <img
+                                className="img-product"
+                                src={image}
+                                alt={title}
+                                loading="lazy"
+                              />
+                            </a>
+                            <div className="card-product-info">
+                              <a
+                                href={
+                                  product.slug
+                                    ? `/products/${product.slug}`
+                                    : "#"
+                                }
+                                className="title link"
+                                onClick={(e) => {
+                                  if (!product.slug) e.preventDefault();
+                                }}
+                              >
+                                {title}
+                              </a>
+                              <span className="price">${price.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="featured-product-item">
+                        <div className="card-product-info">
+                          <span className="title link">
+                            No sale products found
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="featured-product-item">
-                      <a
-                        href="product-detail.html"
-                        className="card-product-wrapper"
-                      >
-                        <img
-                          className="lazyload img-product"
-                          data-src="images/products/img-feature-2.png"
-                          alt="image-feature"
-                        />
-                      </a>
-                      <div className="card-product-info">
-                        <a href="#" className="title link">
-                          Lace-trimmed Satin Camisole Top
-                        </a>
-                        <span className="price">€24,95</span>
-                      </div>
-                    </div>
-                    <div className="featured-product-item">
-                      <a
-                        href="product-detail.html"
-                        className="card-product-wrapper"
-                      >
-                        <img
-                          className="lazyload img-product"
-                          data-src="images/products/img-feature-3.png"
-                          alt="image-feature"
-                        />
-                      </a>
-                      <div className="card-product-info">
-                        <a href="#" className="title link">
-                          Linen-blend Tank Top
-                        </a>
-                        <span className="price">$16.95</span>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -399,51 +673,29 @@ const Products = () => {
                 </div>
                 <div id="gallery" className="collapse show">
                   <div className="grid-3 gap-4 mb_36">
-                    <a href="product-detail.html" className="item-gallery">
-                      <img
-                        className="lazyload"
-                        data-src="images/shop/gallery/gallery-1.jpg"
-                        alt="img-gallery"
-                      />
-                    </a>
-                    <a href="product-detail.html" className="item-gallery">
-                      <img
-                        className="lazyload"
-                        data-src="images/shop/gallery/gallery-2.jpg"
-                        alt="img-gallery"
-                      />
-                    </a>
-                    <a href="product-detail.html" className="item-gallery">
-                      <img
-                        className="lazyload"
-                        data-src="images/shop/gallery/gallery-3.jpg"
-                        src="images/shop/gallery/gallery-3.jpg"
-                        alt="img-gallery"
-                      />
-                    </a>
-                    <a href="product-detail.html" className="item-gallery">
-                      <img
-                        className="lazyload"
-                        data-src="images/shop/gallery/gallery-4.jpg"
-                        alt="img-gallery"
-                      />
-                    </a>
-                    <a href="product-detail.html" className="item-gallery">
-                      <img
-                        className="lazyload"
-                        data-src="images/shop/gallery/gallery-5.jpg"
-                        src="images/shop/gallery/gallery-5.jpg"
-                        alt="img-gallery"
-                      />
-                    </a>
-                    <a href="product-detail.html" className="item-gallery">
-                      <img
-                        className="lazyload"
-                        data-src="images/shop/gallery/gallery-6.jpg"
-                        src="images/shop/gallery/gallery-6.jpg"
-                        alt="img-gallery"
-                      />
-                    </a>
+                    {galleryProducts.map((product, index) => {
+                      const image = getProductImage(product);
+                      const title = product.name || product.title || "Product";
+                      return (
+                        <a
+                          href={
+                            product.slug ? `/products/${product.slug}` : "#"
+                          }
+                          className="item-gallery"
+                          key={`${product.id || index}`}
+                          onClick={(e) => {
+                            if (!product.slug) e.preventDefault();
+                          }}
+                        >
+                          <img
+                            className="img-fluid"
+                            src={image}
+                            alt={title}
+                            loading="lazy"
+                          />
+                        </a>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -462,42 +714,22 @@ const Products = () => {
                   <ul className="tf-social-icon d-flex gap-10">
                     <li>
                       <a
-                        href="#"
+                        href="https://facebook.com/huehoppers"
                         className="box-icon w_34 round bg_line social-facebook"
+                        target="_blank"
+                        rel="noreferrer"
                       >
                         <i className="icon fs-14 icon-fb" />
                       </a>
                     </li>
                     <li>
                       <a
-                        href="#"
-                        className="box-icon w_34 round bg_line social-twiter"
-                      >
-                        <i className="icon fs-12 icon-Icon-x" />
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
+                        href="https://instagram.com/huehoppers26"
                         className="box-icon w_34 round bg_line social-instagram"
+                        target="_blank"
+                        rel="noreferrer"
                       >
                         <i className="icon fs-14 icon-instagram" />
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="box-icon w_34 round bg_line social-tiktok"
-                      >
-                        <i className="icon fs-14 icon-tiktok" />
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="box-icon w_34 round bg_line social-pinterest"
-                      >
-                        <i className="icon fs-14 icon-pinterest-1" />
                       </a>
                     </li>
                   </ul>
@@ -510,56 +742,70 @@ const Products = () => {
             {/* ── Products Grid ── */}
             {loading ? (
               <div
-                className="tf-grid-layout wrapper-shop tf-col-1"
+                className="tf-grid-layout wrapper-shop tf-col-4"
                 id="gridLayout"
                 style={{
                   width: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  margin: "60px 0",
+                  display: "grid",
+                  gap: 24,
+                  margin: "20px 0 60px",
                 }}
               >
-                <Loading />
+                {[...Array(8)].map((_, i) => (
+                  <ProductSkeleton key={`initial-${i}`} />
+                ))}
+              </div>
+            ) : products.length === 0 ? (
+              <div
+                className="wrapper-control-shop tf-shop-content"
+                style={{
+                  minHeight: "420px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
+                <div
+                  style={{
+                    width: "100%",
+                    maxWidth: "560px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                    margin: "0 auto",
+                  }}
+                >
+                  <p style={{ fontSize: 32, marginBottom: 12 }}>🔍</p>
+                  <p
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: "#2c3a34",
+                      marginBottom: 8,
+                    }}
+                  >
+                    No products found!
+                  </p>
+                  <p style={{ fontSize: 14, color: "#888" }}>
+                    Try adjusting your filters or{" "}
+                    <Link
+                      to="/collections"
+                      style={{ color: "#2c3a34", fontWeight: 600 }}
+                    >
+                      browse collections
+                    </Link>
+                    .
+                  </p>
+                </div>
               </div>
             ) : (
               <div
                 className="tf-grid-layout wrapper-shop tf-col-4"
                 id="gridLayout"
               >
-                {/* Loading skeletons */}
-
-                {!loading && products.length === 0 && (
-                  <div
-                    style={{
-                      gridColumn: "1/-1",
-                      textAlign: "center",
-                      padding: "60px 0",
-                    }}
-                  >
-                    <p style={{ fontSize: 32, marginBottom: 12 }}>🔍</p>
-                    <p
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 600,
-                        color: "#2c3a34",
-                        marginBottom: 8,
-                      }}
-                    >
-                      No products found!
-                    </p>
-                    <p style={{ fontSize: 14, color: "#888" }}>
-                      Try adjusting your filters or{" "}
-                      <Link
-                        to="/collections"
-                        style={{ color: "#2c3a34", fontWeight: 600 }}
-                      >
-                        browse collections
-                      </Link>
-                      .
-                    </p>
-                  </div>
-                )}
-
                 {/* Product cards */}
                 {!loading &&
                   products.map((product) => (
@@ -608,6 +854,9 @@ const Products = () => {
         onFilterChange={(f) =>
           handleFilterChange({
             categories: f.categories || [],
+            product_types: f.product_types || [],
+            genders: f.genders || [],
+            collections: f.collections || [],
             sizes: f.sizes || [],
             colors: f.colors || [],
             priceRange: [f.priceMin || 0, f.priceMax || 5000],

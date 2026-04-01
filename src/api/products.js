@@ -1,9 +1,11 @@
 import { PRODUCTS, PRODUCT_FILTERS, getWrapper, returnOrThrow } from "./utils";
 
 export const getProducts = async (page = 1, filters = {}) => {
+  console.log("Fetching products with filters:", filters, "and page:", page);
   const params = new URLSearchParams({ page });
 
   if (filters.sort) params.append("sort", filters.sort);
+  if (filters.gender) params.append("gender", filters.gender);
   if (filters.categories) params.append("categories", filters.categories);
   if (filters.sizes) params.append("sizes", filters.sizes);
   if (filters.colors) params.append("colors", filters.colors);
@@ -15,6 +17,11 @@ export const getProducts = async (page = 1, filters = {}) => {
   const resJSON = await getWrapper(`${PRODUCTS}?${params.toString()}`);
   const result = await returnOrThrow(resJSON);
   return result;
+};
+
+export const getProductCounts = async () => {
+  const resJSON = await getWrapper(`${PRODUCTS}/counts`);
+  return returnOrThrow(resJSON);
 };
 
 export const getProductDetails = async (productSlug) => {

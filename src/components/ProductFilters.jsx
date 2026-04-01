@@ -6,7 +6,7 @@ import { getFilters } from "../api/products";
  * Props:
  * - open: boolean
  * - onClose: function
- * - onFilterChange: function({ availability, priceMin, priceMax, colors, sizes, categories })
+ * - onFilterChange: function({ availability, priceMin, priceMax, colors, sizes, categories, product_types, genders, collections })
  * - collectionId: optional string
  */
 const ProductFilters = ({
@@ -22,6 +22,9 @@ const ProductFilters = ({
   const [selectedColors, setSelectedColors] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedCats, setSelectedCats] = useState([]);
+  const [selectedProductTypes, setSelectedProductTypes] = useState([]);
+  const [selectedGenders, setSelectedGenders] = useState([]);
+  const [selectedCollections, setSelectedCollections] = useState([]);
 
   // ── Load filters from API ─────────────────────────────────
   useEffect(() => {
@@ -51,6 +54,9 @@ const ProductFilters = ({
       colors: selectedColors,
       sizes: selectedSizes,
       categories: selectedCats,
+      product_types: selectedProductTypes,
+      genders: selectedGenders,
+      collections: selectedCollections,
       ...overrides,
     });
   };
@@ -70,6 +76,9 @@ const ProductFilters = ({
     setSelectedColors([]);
     setSelectedSizes([]);
     setSelectedCats([]);
+    setSelectedProductTypes([]);
+    setSelectedGenders([]);
+    setSelectedCollections([]);
     onFilterChange?.({
       availability: "",
       priceMin: Number(data?.price_range?.min) || 0,
@@ -77,6 +86,9 @@ const ProductFilters = ({
       colors: [],
       sizes: [],
       categories: [],
+      product_types: [],
+      genders: [],
+      collections: [],
     });
   };
 
@@ -115,6 +127,149 @@ const ProductFilters = ({
           </header>
 
           <div className="canvas-body">
+            {/* ── Product Types (API) ── */}
+            {data?.product_types?.length > 0 && (
+              <div className="widget-facet">
+                <div className="facet-title">
+                  <span>Product Types</span>
+                  <span className="icon icon-arrow-up" />
+                </div>
+                <ul className="list-categoris current-scrollbar mb_36">
+                  {data.product_types.map((type) => {
+                    const value =
+                      typeof type === "string"
+                        ? type
+                        : type.slug ||
+                          type.product_type ||
+                          type.value ||
+                          type.name ||
+                          "";
+                    const label =
+                      typeof type === "string"
+                        ? type
+                        : type.name ||
+                          type.title ||
+                          type.label ||
+                          type.product_type ||
+                          type.value ||
+                          "Product type";
+                    const count =
+                      typeof type === "string"
+                        ? null
+                        : (type.count ??
+                          type.products_count ??
+                          type.product_count ??
+                          type.total ??
+                          null);
+                    return (
+                      <li
+                        key={value || label}
+                        className={`cate-item${selectedProductTypes.includes(value) ? " current" : ""}`}
+                        onClick={() =>
+                          toggleItem(
+                            selectedProductTypes,
+                            setSelectedProductTypes,
+                            value,
+                            "product_types",
+                          )
+                        }
+                        style={{ cursor: "pointer" }}
+                      >
+                        <a href="#" onClick={(e) => e.preventDefault()}>
+                          <span>{label}</span>
+                          {count !== null && count !== undefined ? (
+                            <>
+                              &nbsp;<span>({count})</span>
+                            </>
+                          ) : null}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {/* ── Collections (API) ── */}
+            {data?.collections?.length > 0 && (
+              <div className="widget-facet">
+                <div className="facet-title">
+                  <span>Collections</span>
+                  <span className="icon icon-arrow-up" />
+                </div>
+                <ul className="list-categoris current-scrollbar mb_36">
+                  {data.collections.map((collection) => (
+                    <li
+                      key={collection.id}
+                      className={`cate-item${selectedCollections.includes(collection.slug) ? " current" : ""}`}
+                      onClick={() =>
+                        toggleItem(
+                          selectedCollections,
+                          setSelectedCollections,
+                          collection.slug,
+                          "collections",
+                        )
+                      }
+                      style={{ cursor: "pointer" }}
+                    >
+                      <a href="#" onClick={(e) => e.preventDefault()}>
+                        <span>{collection.name}</span>&nbsp;
+                        <span>({collection.count})</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* ── Genders (API) ── */}
+            {data?.genders?.length > 0 && (
+              <div className="widget-facet">
+                <div className="facet-title">
+                  <span style={{ textTransform: "none" }}>Gender</span>
+                  <span className="icon icon-arrow-up" />
+                </div>
+                <ul className="list-categoris current-scrollbar mb_36">
+                  {data.genders.map((gender) => {
+                    const label =
+                      typeof gender === "string"
+                        ? gender.charAt(0).toUpperCase() + gender.slice(1)
+                        : gender?.name ||
+                          gender?.label ||
+                          gender?.value ||
+                          "Gender";
+                    const value =
+                      typeof gender === "string"
+                        ? gender
+                        : gender?.value ||
+                          gender?.slug ||
+                          gender?.name ||
+                          gender?.label ||
+                          "";
+                    return (
+                      <li
+                        key={value || label}
+                        className={`cate-item${selectedGenders.includes(value) ? " current" : ""}`}
+                        onClick={() =>
+                          toggleItem(
+                            selectedGenders,
+                            setSelectedGenders,
+                            value,
+                            "genders",
+                          )
+                        }
+                        style={{ cursor: "pointer" }}
+                      >
+                        <a href="#" onClick={(e) => e.preventDefault()}>
+                          <span>{label}</span>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
             {/* ── Categories (API) ── */}
             {data?.categories?.length > 0 && (
               <div className="widget-facet">
@@ -369,21 +524,7 @@ const ProductFilters = ({
               </div>
             )}
 
-            {/* ── Actions ── */}
-            <div style={{ display: "flex", gap: 12, paddingTop: 8 }}>
-              <button
-                onClick={handleClearAll}
-                className="tf-btn btn-outline animate-hover-btn w-100 justify-content-center"
-              >
-                Clear All
-              </button>
-              <button
-                onClick={onClose}
-                className="tf-btn btn-fill animate-hover-btn w-100 justify-content-center"
-              >
-                Apply
-              </button>
-            </div>
+            {/* actions intentionally removed: filters update live */}
           </div>
         </div>
       </div>
