@@ -1,12 +1,12 @@
 import { showErrorMessage } from "../utils";
 
-export const HOST =
-  "https://d29f-2401-4900-1c75-f139-2cf8-f64f-3ed3-a22f.ngrok-free.app";
+// export const HOST =
+// "https://d29f-2401-4900-1c75-f139-2cf8-f64f-3ed3-a22f.ngrok-free.app";
 
-export const IMAGE_HOST = "http://localhost:3002";
+// export const IMAGE_HOST = "http://localhost:3002";
 
-// export const IMAGE_HOST = "https://huehoppers.s3.amazonaws.com";
-// export const HOST = "https://backend.huehoppers.com";
+export const IMAGE_HOST = "https://huehoppers.s3.amazonaws.com";
+export const HOST = "https://backend.huehoppers.com";
 // LOGIN
 export const LOGIN = HOST + "/api" + "/users/login";
 
